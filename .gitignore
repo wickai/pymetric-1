@@ -1,0 +1,8 @@
+
+# data for imagenet
+pycls/datasets/data/cifar-10*
+
+# uv related
+pyproject.toml
+uv.lock
+.python-version

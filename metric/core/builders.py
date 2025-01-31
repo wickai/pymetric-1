@@ -9,22 +9,23 @@
 
 import torch
 from metric.core.config import cfg
-from metric.modeling.backbones import ResNet
+
+# from metric.modeling.backbones import ResNet
 
 # from metric.modeling.backbones import VisionTransformer
-from metric.modeling.backbones import resnest269, resnest50
-from metric.modeling.backbones import resnet50x1, resnet152x1
-from metric.modeling.backbones import MobileNetMock
+# from metric.modeling.backbones import resnest269, resnest50
+# from metric.modeling.backbones import resnet50x1, resnet152x1
+from metric.modeling.backbones.mobilenet_blocks import MobileNetMock
 from metric.modeling.heads import LinearHead
 
 # Supported backbones
 _models = {
-    "resnet": ResNet,
+    # "resnet": ResNet,
     #    "vit": VisionTransformer,
-    "resnest269": resnest269,
-    "resnest50": resnest50,
-    "resnet50x1": resnet50x1,
-    "resnet152x1": resnet152x1,
+    # "resnest269": resnest269,
+    # "resnest50": resnest50,
+    # "resnet50x1": resnet50x1,
+    # "resnet152x1": resnet152x1,
     "mobilenetmock": MobileNetMock,
 }
 # Supported loss functions

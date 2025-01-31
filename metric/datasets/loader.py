@@ -14,17 +14,25 @@ from metric.core.config import cfg
 from metric.datasets.commondataset import DataSet
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler
+from .cifar10 import Cifar10
 
 
 # Default data directory (/path/pycls/pycls/datasets/data)
 _DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
+# Relative data paths to default data directory
+_PATHS = {"cifar10": "cifar10"}
+
 
 def _construct_loader(dataset_name, split, batch_size, shuffle, drop_last):
     """Constructs the data loader for the given dataset."""
-    data_path = os.path.join(_DATA_DIR, dataset_name)
-    # Construct the dataset
-    dataset = DataSet(data_path, split)
+    if dataset_name.lower() == "cifar10":
+        data_path = os.path.join(_DATA_DIR, _PATHS[dataset_name.lower()])
+        dataset = Cifar10(data_path, split)
+    else:
+        data_path = os.path.join(_DATA_DIR, dataset_name)
+        # Construct the dataset from commendataset
+        dataset = DataSet(data_path, split)
     # Create a sampler for multi-process training
     sampler = DistributedSampler(dataset) if cfg.NUM_GPUS > 1 else None
     # Create a loader
@@ -63,7 +71,7 @@ def construct_test_loader():
 
 
 def shuffle(loader, cur_epoch):
-    """"Shuffles the data."""
+    """ "Shuffles the data."""
     err_str = "Sampler type '{}' not supported".format(type(loader.sampler))
     assert isinstance(loader.sampler, (RandomSampler, DistributedSampler)), err_str
     # RandomSampler handles shuffling automatically

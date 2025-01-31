@@ -43,7 +43,8 @@ pip install -r $PYMETRIC/requirements.txt
 Set PYTHONPATH:
 
 ```
-cd $PYMETRIC && export PYTHONPATH=`pwd`:$PYTHONPATH
+export PYMETRIC=`pwd`
+export PYTHONPATH=`pwd`:$PYTHONPATH
 ```
 
 ## Datasets
@@ -61,6 +62,13 @@ python tools/train_metric.py \
     OUT_DIR ./output \
     PORT 12001 \
     TRAIN.WEIGHTS path/to/pretrainedmodel
+```
+
+```
+python tools/metric/train_metric.py \
+    --cfg configs/R-50_cifar.yaml \
+    OUT_DIR ./output \
+    PORT 12001
 ```
 
 Extracting features(labels) and evaluation

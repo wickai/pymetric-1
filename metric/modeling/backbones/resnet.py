@@ -26,28 +26,6 @@ def get_trans_fun(name):
     return trans_funs[name]
 
 
-class ResHead(nn.Module):
-    """ResNet head: AvgPool, 1x1."""
-
-    def __init__(self, w_in, nc):
-        super(ResHead, self).__init__()
-        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(w_in, nc, bias=True)
-
-    def forward(self, x):
-        x = self.avg_pool(x)
-        x = x.view(x.size(0), -1)
-        #x = x[..., 0, 0]
-        x = self.fc(x)
-        return x
-
-    @staticmethod
-    def complexity(cx, w_in, nc):
-        cx["h"], cx["w"] = 1, 1
-        cx = net.complexity_conv2d(cx, w_in, nc, 1, 1, 0, bias=True)
-        return cx
-
-
 class BasicTransform(nn.Module):
     """Basic transformation: 3x3, BN, ReLU, 3x3, BN."""
 
@@ -220,10 +198,10 @@ class ResNet(nn.Module):
     """ResNet model."""
 
     def __init__(self):
-        #datasets = ["cifar10", "imagenet"]
-        #err_str = "Dataset {} is not supported"
-        #assert cfg.TRAIN.DATASET in datasets, err_str.format(cfg.TRAIN.DATASET)
-        #assert cfg.TEST.DATASET in datasets, err_str.format(cfg.TEST.DATASET)
+        # datasets = ["cifar10", "imagenet"]
+        # err_str = "Dataset {} is not supported"
+        # assert cfg.TRAIN.DATASET in datasets, err_str.format(cfg.TRAIN.DATASET)
+        # assert cfg.TEST.DATASET in datasets, err_str.format(cfg.TEST.DATASET)
         super(ResNet, self).__init__()
         if "cifar" in cfg.TRAIN.DATASET:
             self._construct_cifar()
@@ -239,7 +217,7 @@ class ResNet(nn.Module):
         self.s1 = ResStage(16, 16, stride=1, d=d)
         self.s2 = ResStage(16, 32, stride=2, d=d)
         self.s3 = ResStage(32, 64, stride=2, d=d)
-        self.head = ResHead(64, nc=cfg.MODEL.NUM_CLASSES)
+        # self.head = ResHead(64, nc=cfg.MODEL.NUM_CLASSES)
 
     def _construct_imagenet(self):
         g, gw = cfg.RESNET.NUM_GROUPS, cfg.RESNET.WIDTH_PER_GROUP
@@ -250,7 +228,7 @@ class ResNet(nn.Module):
         self.s2 = ResStage(256, 512, stride=2, d=d2, w_b=w_b * 2, num_gs=g)
         self.s3 = ResStage(512, 1024, stride=2, d=d3, w_b=w_b * 4, num_gs=g)
         self.s4 = ResStage(1024, 2048, stride=2, d=d4, w_b=w_b * 8, num_gs=g)
-        #self.head = ResHead(2048, nc=cfg.MODEL.NUM_CLASSES)
+        # self.head = ResHead(2048, nc=cfg.MODEL.NUM_CLASSES)
 
     def forward(self, x):
         for module in self.children():
@@ -266,7 +244,6 @@ class ResNet(nn.Module):
             cx = ResStage.complexity(cx, 16, 16, stride=1, d=d)
             cx = ResStage.complexity(cx, 16, 32, stride=2, d=d)
             cx = ResStage.complexity(cx, 32, 64, stride=2, d=d)
-            cx = ResHead.complexity(cx, 64, nc=cfg.MODEL.NUM_CLASSES)
         else:
             g, gw = cfg.RESNET.NUM_GROUPS, cfg.RESNET.WIDTH_PER_GROUP
             (d1, d2, d3, d4) = _IN_STAGE_DS[cfg.MODEL.DEPTH]
@@ -276,5 +253,4 @@ class ResNet(nn.Module):
             cx = ResStage.complexity(cx, 256, 512, 2, d=d2, w_b=w_b * 2, num_gs=g)
             cx = ResStage.complexity(cx, 512, 1024, 2, d=d3, w_b=w_b * 4, num_gs=g)
             cx = ResStage.complexity(cx, 1024, 2048, 2, d=d4, w_b=w_b * 8, num_gs=g)
-            cx = ResHead.complexity(cx, 2048, nc=cfg.MODEL.NUM_CLASSES)
         return cx

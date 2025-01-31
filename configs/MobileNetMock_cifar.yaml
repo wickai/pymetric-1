@@ -1,12 +1,11 @@
 MODEL:
-  TYPE: resnet
-  DEPTH: 50
+  TYPE: mobilenetmock
   NUM_CLASSES: 10
   HEADS:
     NAME: "LinearHead"
     NUM_CLASSES: 10
-    IN_FEAT: 64
-    REDUCTION_DIM: 64
+    IN_FEAT: 960
+    REDUCTION_DIM: 960
     POOL_LAYER: "avgpool"
     CLS_LAYER: "linear"
     MARGIN: 0.15
@@ -14,11 +13,11 @@ MODEL:
 BN:
   ZERO_INIT_FINAL_GAMMA: True
 OPTIM:
-  BASE_LR: 0.4
+  BASE_LR: 0.16
   LR_POLICY: steps
-  STEPS: [0, 30, 60, 90]
+  STEPS: [0, 100, 110, 120]
   LR_MULT: 0.1
-  MAX_EPOCH: 100
+  MAX_EPOCH: 120
   MOMENTUM: 0.9
   NESTEROV: True
   WEIGHT_DECAY: 0.0001

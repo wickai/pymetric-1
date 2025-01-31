@@ -13,7 +13,10 @@ import pickle
 import numpy as np
 import pycls.core.logging as logging
 import torch.utils.data
-from pycls.core.config import cfg
+
+# from pycls.core.config import cfg
+from metric.core.config import cfg
+
 # from pycls.core.io import pathmgr
 
 
@@ -47,11 +50,12 @@ class Cifar10(torch.utils.data.Dataset):
         inputs, labels = [], []
         for batch_name in batch_names:
             batch_path = os.path.join(self._data_path, batch_name)
-            with pathmgr.open(batch_path, "rb") as f:
+            with open(batch_path, "rb") as f:
                 data = pickle.load(f, encoding="bytes")
             inputs.append(data[b"data"])
             labels += data[b"labels"]
         # Combine and reshape the inputs
+        print("cfg.TRAIN.IM_SIZE", cfg.TRAIN.IM_SIZE)
         assert cfg.TRAIN.IM_SIZE == 32, "CIFAR-10 images are 32x32"
         inputs = np.vstack(inputs).astype(np.float32)
         inputs = inputs.reshape((-1, 3, cfg.TRAIN.IM_SIZE, cfg.TRAIN.IM_SIZE))

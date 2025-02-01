@@ -4,7 +4,7 @@ import torch.nn as nn
 # from config import args
 class Args:
     def __init__(self):
-        self.use_se = True
+        self.use_se = False
 
 
 args = Args()

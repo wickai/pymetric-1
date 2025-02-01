@@ -10,12 +10,12 @@
 import torch
 from metric.core.config import cfg
 
-# from metric.modeling.backbones import ResNet
+# from metric.modeling.backbones.resnet import ResNet
 
 # from metric.modeling.backbones import VisionTransformer
 # from metric.modeling.backbones import resnest269, resnest50
-# from metric.modeling.backbones import resnet50x1, resnet152x1
-from metric.modeling.backbones.mobilenet_blocks import MobileNetMock
+from metric.modeling.backbones.resnet_wider import resnet50x1
+from metric.modeling.backbones.mobilenet_mock import MobileNetMock
 from metric.modeling.heads import LinearHead
 
 # Supported backbones
@@ -24,7 +24,7 @@ _models = {
     #    "vit": VisionTransformer,
     # "resnest269": resnest269,
     # "resnest50": resnest50,
-    # "resnet50x1": resnet50x1,
+    "resnet50x1": resnet50x1,
     # "resnet152x1": resnet152x1,
     "mobilenetmock": MobileNetMock,
 }

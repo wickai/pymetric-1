@@ -9,7 +9,7 @@ from .mobilenet_blocks import (
 # from config import args, blocks_keys
 
 
-RANS = best_rngs = [0, 1, 2, 2, 2, 0, 2, 1, 2, 4, 2, 2, 3, 5, 5, 4, 4, 5, 5, 2, 3]
+RANS = best_rngs = [1, 1, 4, 3, 2, 2, 1, 3, 1, 4, 3, 4, 0, 2, 2, 4, 1, 5, 3, 4, 3]
 
 
 class MobileNetMock(nn.Module):

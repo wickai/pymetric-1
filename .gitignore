@@ -4,6 +4,7 @@ pycls/datasets/data/cifar-10*
 pycls/datasets/data/cifar*
 
 metric/datasets/data/*
+metric/datasets/data/imagenet
 
 # classification/ from  https://github.com/pytorch/vision/blob/main/references/classification/train.py
 classification/
@@ -25,6 +26,7 @@ other_data
 
 # ./output
 output/
+output_*/
 
 # log
 log*

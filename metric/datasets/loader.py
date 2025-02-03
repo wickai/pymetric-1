@@ -15,6 +15,8 @@ from metric.datasets.commondataset import DataSet
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler
 from .cifar10 import Cifar10
+from metric.datasets.torch_transforms import get_mixup_cutmix
+from torch.utils.data.dataloader import default_collate
 
 
 # Default data directory (/path/pycls/pycls/datasets/data)
@@ -24,7 +26,9 @@ _DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 _PATHS = {"cifar10": "cifar10"}
 
 
-def _construct_loader(dataset_name, split, batch_size, shuffle, drop_last):
+def _construct_loader(
+    dataset_name, split, batch_size, shuffle, drop_last, use_mixup_cutmix
+):
     """Constructs the data loader for the given dataset."""
     if dataset_name.lower() == "cifar10":
         data_path = os.path.join(_DATA_DIR, _PATHS[dataset_name.lower()])
@@ -35,6 +39,26 @@ def _construct_loader(dataset_name, split, batch_size, shuffle, drop_last):
         dataset = DataSet(data_path, split)
     # Create a sampler for multi-process training
     sampler = DistributedSampler(dataset) if cfg.NUM_GPUS > 1 else None
+
+    # mixup_cutmix
+    num_classes = len(set(dataset._class_ids))
+    if use_mixup_cutmix:
+        mixup_cutmix = get_mixup_cutmix(
+            mixup_alpha=cfg.DATA_LOADER.MIXUP_ALPHA,
+            cutmix_alpha=cfg.DATA_LOADER.CUTMIX_ALPHA,
+            num_classes=num_classes,
+            use_v2=False,
+        )
+    else:
+        mixup_cutmix = None
+    if mixup_cutmix is not None:
+
+        def collate_fn(batch):
+            return mixup_cutmix(*default_collate(batch))
+
+    else:
+        collate_fn = default_collate
+
     # Create a loader
     loader = torch.utils.data.DataLoader(
         dataset,
@@ -44,6 +68,7 @@ def _construct_loader(dataset_name, split, batch_size, shuffle, drop_last):
         num_workers=cfg.DATA_LOADER.NUM_WORKERS,
         pin_memory=cfg.DATA_LOADER.PIN_MEMORY,
         drop_last=drop_last,
+        collate_fn=collate_fn,
     )
     return loader
 
@@ -56,6 +81,7 @@ def construct_train_loader():
         batch_size=int(cfg.TRAIN.BATCH_SIZE / cfg.NUM_GPUS),
         shuffle=True,
         drop_last=True,
+        use_mixup_cutmix=True,
     )
 
 
@@ -67,6 +93,7 @@ def construct_test_loader():
         batch_size=int(cfg.TEST.BATCH_SIZE / cfg.NUM_GPUS),
         shuffle=False,
         drop_last=False,
+        use_mixup_cutmix=False,
     )
 
 

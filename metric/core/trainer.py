@@ -10,7 +10,6 @@
 import os
 
 import numpy as np
-import metric.core.benchmark as benchmark
 import metric.core.builders as builders
 import metric.core.checkpoint as checkpoint
 import metric.core.config as config
@@ -24,7 +23,6 @@ import torch
 from metric.core.config import cfg
 
 logger = logging.get_logger(__name__)
-
 
 
 def setup_env():
@@ -52,7 +50,7 @@ def setup_model():
     model = builders.build_arch()
     logger.info("Model:\n{}".format(model))
     # Log model complexity
-    #logger.info(logging.dump_log_data(net.complexity(model), "complexity"))
+    # logger.info(logging.dump_log_data(net.complexity(model), "complexity"))
     # Transfer the model to the current GPU device
     err_str = "Cannot use more GPU devices than available"
     assert cfg.NUM_GPUS <= torch.cuda.device_count(), err_str
@@ -62,10 +60,13 @@ def setup_model():
     if cfg.NUM_GPUS > 1:
         # Make model replica operate on the current device
         model = torch.nn.parallel.DistributedDataParallel(
-            module=model, device_ids=[cur_device], output_device=cur_device, find_unused_parameters=True
+            module=model,
+            device_ids=[cur_device],
+            output_device=cur_device,
+            find_unused_parameters=True,
         )
         # Set complexity function to be module's complexity function
-        #model.complexity = model.module.complexity
+        # model.complexity = model.module.complexity
     return model
 
 
@@ -92,15 +93,32 @@ def train_epoch(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch
         # Update the parameters
         optimizer.step()
         # Compute the errors
-        top1_err, top5_err = meters.topk_errors(logits, labels, [1, 5])
-        # Combine the stats across the GPUs (no reduction if 1 GPU used)
-        loss, top1_err, top5_err = dist.scaled_all_reduce([loss, top1_err, top5_err])
-        # Copy the stats from GPU to CPU (sync point)
-        loss, top1_err, top5_err = loss.item(), top1_err.item(), top5_err.item()
-        train_meter.iter_toc()
-        # Update and log stats
-        mb_size = inputs.size(0) * cfg.NUM_GPUS
-        train_meter.update_stats(top1_err, top5_err, loss, lr, mb_size)
+
+        # add mix to modify these
+        if cfg.DATA_LOADER.MIXUP_ALPHA == 0:
+            top1_err, top5_err = meters.topk_errors(logits, labels, [1, 5])
+            # Combine the stats across the GPUs (no reduction if 1 GPU used)
+            loss, top1_err, top5_err = dist.scaled_all_reduce(
+                [loss, top1_err, top5_err]
+            )
+            # Copy the stats from GPU to CPU (sync point)
+            loss, top1_err, top5_err = loss.item(), top1_err.item(), top5_err.item()
+            train_meter.iter_toc()
+            # Update and log stats
+            mb_size = inputs.size(0) * cfg.NUM_GPUS
+            train_meter.update_stats(top1_err, top5_err, loss, lr, mb_size)
+        else:
+            loss = dist.scaled_all_reduce(
+                [
+                    loss,
+                ]
+            )[0]
+            loss = loss.item()
+            train_meter.iter_toc()
+            # Update and log stats
+            mb_size = inputs.size(0) * cfg.NUM_GPUS
+            train_meter.update_stats(loss, lr, mb_size)
+
         train_meter.log_iter_stats(cur_epoch, cur_iter)
         train_meter.iter_tic()
     # Log epoch stats
@@ -159,8 +177,8 @@ def train_model():
     train_meter = meters.TrainMeter(len(train_loader))
     test_meter = meters.TestMeter(len(test_loader))
     # Compute model and loader timings
-    #if start_epoch == 0 and cfg.PREC_TIME.NUM_ITER > 0:
-        #benchmark.compute_time_full(model, loss_fun, train_loader, test_loader)
+    # if start_epoch == 0 and cfg.PREC_TIME.NUM_ITER > 0:
+    # benchmark.compute_time_full(model, loss_fun, train_loader, test_loader)
     # Perform the training loop
     logger.info("Start epoch: {}".format(start_epoch + 1))
     for cur_epoch in range(start_epoch, cfg.OPTIM.MAX_EPOCH):
@@ -200,10 +218,10 @@ def time_model():
     # Setup training/testing environment
     setup_env()
     # Construct the model and loss_fun
-    model = setup_model()
-    loss_fun = builders.build_loss_fun().cuda()
+    setup_model()
+    builders.build_loss_fun().cuda()
     # Create data loaders
-    train_loader = loader.construct_train_loader()
-    test_loader = loader.construct_test_loader()
+    loader.construct_train_loader()
+    loader.construct_test_loader()
     # Compute model and loader timings
-    #benchmark.compute_time_full(model, loss_fun, train_loader, test_loader)
+    # benchmark.compute_time_full(model, loss_fun, train_loader, test_loader)

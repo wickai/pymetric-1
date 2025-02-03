@@ -42,7 +42,9 @@ def topk_errors(preds, labels, ks):
     # (i, j) = 1 if top i-th prediction for the j-th sample is correct
     top_max_k_correct = top_max_k_inds.eq(rep_max_k_labels)
     # Compute the number of topk correct predictions for each k
-    topks_correct = [top_max_k_correct[:k, :].contiguous().view(-1).float().sum() for k in ks]
+    topks_correct = [
+        top_max_k_correct[:k, :].contiguous().view(-1).float().sum() for k in ks
+    ]
     return [(1.0 - x / preds.size(0)) * 100.0 for x in topks_correct]
 
 
@@ -116,15 +118,27 @@ class TrainMeter(object):
     def iter_toc(self):
         self.iter_timer.toc()
 
-    def update_stats(self, top1_err, top5_err, loss, lr, mb_size):
+    # def update_stats(self, top1_err, top5_err, loss, lr, mb_size):
+    #     # Current minibatch stats
+    #     self.mb_top1_err.add_value(top1_err)
+    #     self.mb_top5_err.add_value(top5_err)
+    #     self.loss.add_value(loss)
+    #     self.lr = lr
+    #     # Aggregate stats
+    #     self.num_top1_mis += top1_err * mb_size
+    #     self.num_top5_mis += top5_err * mb_size
+    #     self.loss_total += loss * mb_size
+    #     self.num_samples += mb_size
+
+    def update_stats(self, loss, lr, mb_size):
         # Current minibatch stats
-        self.mb_top1_err.add_value(top1_err)
-        self.mb_top5_err.add_value(top5_err)
+        # self.mb_top1_err.add_value(top1_err)
+        # self.mb_top5_err.add_value(top5_err)
         self.loss.add_value(loss)
         self.lr = lr
         # Aggregate stats
-        self.num_top1_mis += top1_err * mb_size
-        self.num_top5_mis += top5_err * mb_size
+        # self.num_top1_mis += top1_err * mb_size
+        # self.num_top5_mis += top5_err * mb_size
         self.loss_total += loss * mb_size
         self.num_samples += mb_size
 

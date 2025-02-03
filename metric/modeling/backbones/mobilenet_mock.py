@@ -5,11 +5,12 @@ from .mobilenet_blocks import (
     blocks_keys,
     interverted_residual_setting,
 )
+from metric.core.config import cfg
 
 # from config import args, blocks_keys
 
 
-RANS = best_rngs = [1, 1, 4, 3, 2, 2, 1, 3, 1, 4, 3, 4, 0, 2, 2, 4, 1, 5, 3, 4, 3]
+# RANS = best_rngs = [1, 1, 4, 3, 2, 2, 1, 3, 1, 4, 3, 4, 0, 2, 2, 4, 1, 5, 3, 4, 3]
 
 
 class MobileNetMock(nn.Module):
@@ -32,13 +33,22 @@ class MobileNetMock(nn.Module):
 
         # 初始卷积层
         input_channel = int(16 * width_mult)
+        frist_layer_stride = cfg.MODEL.FIRST_LAYER_STRIDE
         self.conv_bn = nn.Sequential(
-            nn.Conv2d(3, input_channel, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.Conv2d(
+                3,
+                input_channel,
+                kernel_size=3,
+                stride=frist_layer_stride,
+                padding=1,
+                bias=False,
+            ),
             nn.BatchNorm2d(input_channel),
             nn.ReLU(inplace=True),
         )
 
         # 动态特征层
+        RANS = cfg.MODEL.RANS
         self.features, output_channel = self._make_features(input_channel, RANS)
 
         # 分类层

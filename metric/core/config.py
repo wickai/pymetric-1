@@ -40,6 +40,8 @@ _C.MODEL.LAYERS = 12
 _C.MODEL.PATCH_SIZE = 32
 _C.MODEL.EMB_DIM = 512
 
+# MobilenetMock Nas r
+_C.MODEL.RANS = [1, 1, 4, 3, 2, 2, 1, 3, 1, 4, 3, 4, 0, 2, 2, 4, 1, 5, 3, 4, 3]  # old
 
 # Number of classes
 _C.MODEL.NUM_CLASSES = 10
@@ -47,7 +49,7 @@ _C.MODEL.NUM_CLASSES = 10
 # Loss function (see pycls/models/loss.py for options)
 _C.MODEL.LOSSES = CfgNode()
 _C.MODEL.LOSSES.NAME = "cross_entropy"
-#_C.MODEL.LOSSES.NAME = "CircleLoss"
+# _C.MODEL.LOSSES.NAME = "CircleLoss"
 # Circle Loss options
 _C.MODEL.LOSSES.CIRCLE = CfgNode()
 _C.MODEL.LOSSES.CIRCLE.MARGIN = 0.25
@@ -326,6 +328,9 @@ _C.DATA_LOADER = CfgNode()
 # Number of data loader workers per process
 _C.DATA_LOADER.NUM_WORKERS = 8
 
+_C.DATA_LOADER.MIXUP_ALPHA = 0.2
+_C.DATA_LOADER.CUTMIX_ALPHA = 0.2
+
 # Load data to pinned host memory
 _C.DATA_LOADER.PIN_MEMORY = True
 
@@ -397,7 +402,7 @@ _C.DOWNLOAD_CACHE = "/tmp/pycls-download-cache"
 
 
 # add infer args for infer.pyo
-_C.INFER= CfgNode()
+_C.INFER = CfgNode()
 _C.INFER.TOTAL_NUM = 4
 _C.INFER.CUT_NUM = 1
 
@@ -409,15 +414,14 @@ _C.register_deprecated_key("PREC_TIME.BATCH_SIZE")
 _C.register_deprecated_key("PREC_TIME.ENABLED")
 
 
-
 def assert_and_infer_cfg(cache_urls=True):
     """Checks config values invariants."""
     err_str = "The first lr step must start at 0"
     assert not _C.OPTIM.STEPS or _C.OPTIM.STEPS[0] == 0, err_str
-    #data_splits = ["train", "val", "test"]
-    #err_str = "Data split '{}' not supported"
-    #assert _C.TRAIN.SPLIT in data_splits, err_str.format(_C.TRAIN.SPLIT)
-    #assert _C.TEST.SPLIT in data_splits, err_str.format(_C.TEST.SPLIT)
+    # data_splits = ["train", "val", "test"]
+    # err_str = "Data split '{}' not supported"
+    # assert _C.TRAIN.SPLIT in data_splits, err_str.format(_C.TRAIN.SPLIT)
+    # assert _C.TEST.SPLIT in data_splits, err_str.format(_C.TEST.SPLIT)
     err_str = "Mini-batch size should be a multiple of NUM_GPUS."
     assert _C.TRAIN.BATCH_SIZE % _C.NUM_GPUS == 0, err_str
     assert _C.TEST.BATCH_SIZE % _C.NUM_GPUS == 0, err_str

@@ -1,7 +1,8 @@
 MODEL:
   TYPE: mobilenetmock
   NUM_CLASSES: 1000
-  RANS: [3, 3, 5, 5, 5, 5, 3, 3, 4, 2, 5, 1, 2, 4, 5, 3, 4]
+  RANS: [3, 3, 1, 1, 1, 3, 3, 3, 0, 3, 0, 3, 0, 0, 1, 3, 4, 3, 2, 0, 1]
+  FIRST_LAYER_STRIDE: 2
   HEADS:
     NAME: "LinearHead"
     NUM_CLASSES: 1000
@@ -11,28 +12,30 @@ MODEL:
     CLS_LAYER: "linear"
     MARGIN: 0.15
     SCALE: 30
+  LOSSES:
+    LABEL_SMOOTHING: 0.1
 BN:
   ZERO_INIT_FINAL_GAMMA: True
 OPTIM:
-  BASE_LR: 0.1
-  LR_POLICY: steps
+  BASE_LR: 1.0
+  LR_POLICY: cos
   STEPS: [0, 30, 60, 90]
   LR_MULT: 0.1
-  MAX_EPOCH: 100
+  MAX_EPOCH: 300
   MOMENTUM: 0.9
   NESTEROV: True
-  WEIGHT_DECAY: 0.0001
+  WEIGHT_DECAY: 0.00004
 TRAIN:
   DATASET: imagenet
-  SPLIT: train_list.txt
-  BATCH_SIZE: 256
+  SPLIT: train_list_modified.txt
+  BATCH_SIZE: 2560
   IM_SIZE: 224
-  CHECKPOINT_PERIOD: 5
+  CHECKPOINT_PERIOD: 1
   EVAL_PERIOD: 1
 TEST:
   DATASET: imagenet
-  SPLIT: val_list.txt
-  BATCH_SIZE: 800
+  SPLIT: val_list_modified.txt
+  BATCH_SIZE: 1600
   IM_SIZE: 224
 NUM_GPUS: 8
 DATA_LOADER:

@@ -71,6 +71,13 @@ python tools/metric/train_metric.py \
     PORT 12001
 ```
 
+```
+python tools/metric/train_metric.py \
+    --cfg configs/MMock_image_8card.yaml \
+    OUT_DIR ./output_imagenet_awsome \
+    PORT 12001 > log_202502061355
+```
+
 Extracting features(labels) and evaluation
 ```
 set ${total_num} = n*(gpu_cards)

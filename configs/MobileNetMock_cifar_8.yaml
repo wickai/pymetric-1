@@ -1,6 +1,7 @@
 MODEL:
   TYPE: mobilenetmock
   NUM_CLASSES: 10
+  RANS: [3, 3, 5, 5, 5, 5, 3, 3, 4, 2, 5, 1, 2, 4, 5, 3, 4]
   HEADS:
     NAME: "LinearHead"
     NUM_CLASSES: 10

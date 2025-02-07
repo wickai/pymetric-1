@@ -77,7 +77,8 @@ def build_model():
 
 def build_loss_fun():
     """Build the loss function."""
-    return get_loss_fun()()
+    sm = cfg.MODEL.LOSSES.LABEL_SMOOTHING
+    return get_loss_fun()(label_smoothing=sm)
 
 
 def build_head():

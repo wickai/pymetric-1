@@ -56,6 +56,8 @@ _C.MODEL.LOSSES.CIRCLE.MARGIN = 0.25
 _C.MODEL.LOSSES.CIRCLE.ALPHA = 128
 _C.MODEL.LOSSES.CIRCLE.SCALE = 1.0
 
+_C.MODEL.FIRST_LAYER_STRIDE = 2
+_C.MODEL.LOSSES.LABEL_SMOOTHING = 0.0
 
 # ------------------------------------------------------------------------------------ #
 # Heads options
@@ -382,7 +384,7 @@ _C.CFG_DEST = "config.yaml"
 
 # Note that non-determinism may still be present due to non-deterministic
 # operator implementations in GPU operator libraries
-_C.RNG_SEED = 1
+_C.RNG_SEED = 42
 
 # Log destination ('stdout' or 'file')
 _C.LOG_DEST = "stdout"

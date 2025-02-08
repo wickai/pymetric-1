@@ -41,7 +41,30 @@ _C.MODEL.PATCH_SIZE = 32
 _C.MODEL.EMB_DIM = 512
 
 # MobilenetMock Nas r
-_C.MODEL.RANS = [1, 1, 4, 3, 2, 2, 1, 3, 1, 4, 3, 4, 0, 2, 2, 4, 1, 5, 3, 4, 3]  # old
+_C.MODEL.RANS = [
+    1,
+    1,
+    4,
+    3,
+    2,
+    2,
+    1,
+    3,
+    1,
+    4,
+    3,
+    4,
+    0,
+    2,
+    2,
+    4,
+    1,
+    5,
+    3,
+    4,
+    3,
+]  # old #overide in yamls
+_C.MODEL.SUPERMODELRETRAIN = False  # overide in yamls
 
 # Number of classes
 _C.MODEL.NUM_CLASSES = 10

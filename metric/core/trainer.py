@@ -71,6 +71,7 @@ def setup_model():
 
 
 def train_epoch(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch):
+    # return
     """Performs one epoch of training."""
     # Shuffle the data
     loader.shuffle(train_loader, cur_epoch)
@@ -84,17 +85,26 @@ def train_epoch(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch
         # Transfer the data to the current GPU device
         inputs, labels = inputs.cuda(), labels.cuda(non_blocking=True)
         # Perform the forward pass
+        assert cfg.MODEL.TYPE.endswith(
+            "_supermodel"
+        ), "train_code for retrain supuremodel only"
         if cfg.MODEL.TYPE.endswith("_supermodel"):
-            # Uniform Sampling
-            rng = []
-            operations = [list(range(5)) for i in range(21)]  # fixed
-            for i, ops in enumerate(operations):
-                k = np.random.randint(len(ops))
-                select_op = ops[k]
-                rng.append(select_op)
-            # logits = model(image, rng)
-            rnd_labels = np.random.randint(0, 1000, len(labels))
-            logits, preds, targets = model(inputs, rnd_labels, rng)
+            if cfg.MODEL.SUPERMODELRETRAIN is True:
+                # retrain mock model with rngs
+                rng = cfg.MODEL.RANS  # use rngs from search methods.
+            else:
+                # train supermodel
+                # Uniform Sampling
+                rng = []
+                operations = [list(range(5)) for i in range(21)]  # fixed
+                for i, ops in enumerate(operations):
+                    k = np.random.randint(len(ops))
+                    select_op = ops[k]
+                    rng.append(select_op)
+                # logits = model(image, rng)
+                rnd_labels = np.random.randint(0, 1000, len(labels))
+                labels = rnd_labels
+            logits, preds, targets = model(inputs, labels, rng)
         else:
             logits, preds, targets = model(inputs, labels)
         # Compute the loss
@@ -144,19 +154,35 @@ def test_epoch(test_loader, model, test_meter, cur_epoch):
     # Enable eval mode
     model.eval()
     test_meter.iter_tic()
+    # rng = []
+    # operations = [list(range(5)) for i in range(21)]  # fixed
+    # for i, ops in enumerate(operations):
+    #     k = np.random.randint(len(ops))
+    #     # k = 0
+    #     select_op = ops[k]
+    #     rng.append(select_op)
+    # print(f"eval on random fix rngs:{rng}")
+
     for cur_iter, (inputs, labels) in enumerate(test_loader):
         # Transfer the data to the current GPU device
         inputs, labels = inputs.cuda(), labels.cuda(non_blocking=True)
         # Compute the predictions
+        assert cfg.MODEL.TYPE.endswith(
+            "_supermodel"
+        ), "test_code for retrain supuremodel only"
         if cfg.MODEL.TYPE.endswith("_supermodel"):
-            # Uniform Sampling
-            rng = []
-            operations = [list(range(5)) for i in range(21)]  # fixed
-            for i, ops in enumerate(operations):
-                # k = np.random.randint(len(ops))
-                k = 0
-                select_op = ops[k]
-                rng.append(select_op)
+            if cfg.MODEL.SUPERMODELRETRAIN is True:
+                rng = cfg.MODEL.RANS  # use rngs from search methods.
+            else:
+                # Uniform Sampling
+                rng = []
+                operations = [list(range(5)) for i in range(21)]  # fixed
+                for i, ops in enumerate(operations):
+                    k = np.random.randint(len(ops))
+                    k = 0  # use the left-most branch to eval
+                    select_op = ops[k]
+                    rng.append(select_op)
+
             # logits = model(image, rng)
             logits, preds, targets = model(inputs, labels, rng)
         else:

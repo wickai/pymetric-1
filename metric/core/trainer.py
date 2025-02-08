@@ -84,7 +84,19 @@ def train_epoch(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch
         # Transfer the data to the current GPU device
         inputs, labels = inputs.cuda(), labels.cuda(non_blocking=True)
         # Perform the forward pass
-        logits, preds, targets = model(inputs, labels)
+        if cfg.MODEL.TYPE.endswith("_supermodel"):
+            # Uniform Sampling
+            rng = []
+            operations = [list(range(5)) for i in range(21)]  # fixed
+            for i, ops in enumerate(operations):
+                k = np.random.randint(len(ops))
+                select_op = ops[k]
+                rng.append(select_op)
+            # logits = model(image, rng)
+            rnd_labels = np.random.randint(0, 1000, len(labels))
+            logits, preds, targets = model(inputs, rnd_labels, rng)
+        else:
+            logits, preds, targets = model(inputs, labels)
         # Compute the loss
         loss = loss_fun(logits, labels)
         # Perform the backward pass
@@ -136,7 +148,20 @@ def test_epoch(test_loader, model, test_meter, cur_epoch):
         # Transfer the data to the current GPU device
         inputs, labels = inputs.cuda(), labels.cuda(non_blocking=True)
         # Compute the predictions
-        logits, preds, targets = model(inputs, labels)
+        if cfg.MODEL.TYPE.endswith("_supermodel"):
+            # Uniform Sampling
+            rng = []
+            operations = [list(range(5)) for i in range(21)]  # fixed
+            for i, ops in enumerate(operations):
+                # k = np.random.randint(len(ops))
+                k = 0
+                select_op = ops[k]
+                rng.append(select_op)
+            # logits = model(image, rng)
+            logits, preds, targets = model(inputs, labels, rng)
+        else:
+            logits, preds, targets = model(inputs, labels)
+        # logits, preds, targets = model(inputs, labels)
         # Compute the errors
         top1_err, top5_err = meters.topk_errors(logits, labels, [1, 5])
         # Combine the errors across the GPUs  (no reduction if 1 GPU used)

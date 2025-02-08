@@ -1,0 +1,46 @@
+MODEL:
+  TYPE: mobilenet_supermodel
+  NUM_CLASSES: 1000
+  FIRST_LAYER_STRIDE: 2
+  HEADS:
+    NAME: "LinearHead"
+    NUM_CLASSES: 1000
+    IN_FEAT: 960
+    REDUCTION_DIM: 960
+    POOL_LAYER: "avgpool"
+    CLS_LAYER: "linear"
+    MARGIN: 0.15
+    SCALE: 30
+  LOSSES:
+    LABEL_SMOOTHING: 0.1
+BN:
+  ZERO_INIT_FINAL_GAMMA: True
+OPTIM:
+  BASE_LR: 1.0
+  LR_POLICY: steps
+  STEPS: [0, 35, 70, 100]
+  LR_MULT: 0.1
+  MAX_EPOCH: 120
+  MOMENTUM: 0.9
+  NESTEROV: True
+  WEIGHT_DECAY: 0.00004
+TRAIN:
+  DATASET: imagenet
+  SPLIT: train_list_modified.txt
+  BATCH_SIZE: 2560
+  IM_SIZE: 224
+  CHECKPOINT_PERIOD: 1
+  EVAL_PERIOD: 1
+TEST:
+  DATASET: imagenet
+  SPLIT: val_list_modified.txt
+  BATCH_SIZE: 800
+  IM_SIZE: 224
+NUM_GPUS: 8
+DATA_LOADER:
+  NUM_WORKERS: 16
+  MIXUP_ALPHA: 0.2
+  CUTMIX_ALPHA: 0.2
+CUDNN:
+  BENCHMARK: True
+OUT_DIR: .

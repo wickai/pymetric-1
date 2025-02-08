@@ -16,6 +16,7 @@ from metric.core.config import cfg
 # from metric.modeling.backbones import resnest269, resnest50
 from metric.modeling.backbones.resnet_wider import resnet50x1
 from metric.modeling.backbones.mobilenet_mock import MobileNetMock
+from metric.modeling.backbones.mobilenet_supermodel import MobileNetSupermodel
 from metric.modeling.heads import LinearHead
 
 # Supported backbones
@@ -27,6 +28,7 @@ _models = {
     "resnet50x1": resnet50x1,
     # "resnet152x1": resnet152x1,
     "mobilenetmock": MobileNetMock,
+    "mobilenet_supermodel": MobileNetSupermodel,
 }
 # Supported loss functions
 _loss_funs = {"cross_entropy": torch.nn.CrossEntropyLoss}
@@ -42,6 +44,17 @@ class MetricModel(torch.nn.Module):
 
     def forward(self, x, targets):
         features = self.backbone(x)
+        return self.head(features, targets=targets)
+
+
+class SuperModel(torch.nn.Module):
+    def __init__(self):
+        super(SuperModel, self).__init__()
+        self.backbone = build_model()
+        self.head = build_head()
+
+    def forward(self, x, targets, rngs):
+        features = self.backbone(x, rngs)
         return self.head(features, targets=targets)
 
 
@@ -66,7 +79,10 @@ def get_loss_fun():
 
 
 def build_arch():
-    architecture = MetricModel()
+    if cfg.MODEL.TYPE.endswith("_supermodel"):
+        architecture = SuperModel()
+    else:
+        architecture = MetricModel()
     return architecture
 
 

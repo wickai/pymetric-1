@@ -78,6 +78,11 @@ python tools/metric/train_metric.py \
     PORT 12001 > log_202502061355
 ```
 
+```
+python tools/metric/train_metric.py     --cfg configs/MSuperModel_image_8card.yaml     OUT_DIR ./output_imagenet_supermodel     PORT 12001
+```
+
+
 Extracting features(labels) and evaluation
 ```
 set ${total_num} = n*(gpu_cards)

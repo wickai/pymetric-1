@@ -71,6 +71,8 @@ python tools/metric/train_metric.py \
     PORT 12001
 ```
 
+
+## Supernet + MMock old nas
 ```
 python tools/metric/train_metric.py \
     --cfg configs/MMock_image_8card.yaml \
@@ -81,6 +83,15 @@ python tools/metric/train_metric.py \
 ```
 python tools/metric/train_metric.py     --cfg configs/MSuperModel_image_8card.yaml     OUT_DIR ./output_imagenet_supermodel     PORT 12001
 ```
+
+## MobilenetV2 Nas
+```
+python tools/metric/train_metric.py \
+    --cfg configs/MbV2Nas_image_1card.yaml \
+    OUT_DIR ./output_imagenet \
+    PORT 12001 > log_202506241413
+```
+
 
 
 Extracting features(labels) and evaluation

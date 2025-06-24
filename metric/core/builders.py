@@ -17,6 +17,7 @@ from metric.core.config import cfg
 from metric.modeling.backbones.resnet_wider import resnet50x1
 from metric.modeling.backbones.mobilenet_mock import MobileNetMock
 from metric.modeling.backbones.mobilenet_supermodel import MobileNetSupermodel
+from metric.modeling.backbones.mobilenetv2_nas import mobilenet_v2_nas
 from metric.modeling.heads import LinearHead
 
 # Supported backbones
@@ -29,6 +30,7 @@ _models = {
     # "resnet152x1": resnet152x1,
     "mobilenetmock": MobileNetMock,
     "mobilenet_supermodel": MobileNetSupermodel,
+    "mobilenetv2_nas": mobilenet_v2_nas
 }
 # Supported loss functions
 _loss_funs = {"cross_entropy": torch.nn.CrossEntropyLoss}

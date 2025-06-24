@@ -31,3 +31,13 @@ output_*/
 # log
 log*
 logs/
+
+
+#.vscode/
+.vscode/
+
+# imagenet
+**/imagenet/**
+
+# logs
+log_*

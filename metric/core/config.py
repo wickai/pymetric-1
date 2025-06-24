@@ -64,6 +64,8 @@ _C.MODEL.RANS = [
     4,
     3,
 ]  # old #overide in yamls
+_C.MODEL.OP_CODES = []
+_C.MODEL.WIDTH_CODES = []
 _C.MODEL.SUPERMODELRETRAIN = False  # overide in yamls
 
 # Number of classes
@@ -481,9 +483,11 @@ def load_cfg_fom_args(description="Config file options."):
     """Load config from command line arguments and set any specified options."""
     parser = argparse.ArgumentParser(description=description)
     help_s = "Config file location"
-    parser.add_argument("--cfg", dest="cfg_file", help=help_s, required=True, type=str)
+    parser.add_argument("--cfg", dest="cfg_file",
+                        help=help_s, required=True, type=str)
     help_s = "See pycls/core/config.py for all options"
-    parser.add_argument("opts", help=help_s, default=None, nargs=argparse.REMAINDER)
+    parser.add_argument("opts", help=help_s, default=None,
+                        nargs=argparse.REMAINDER)
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)

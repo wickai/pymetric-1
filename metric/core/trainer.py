@@ -7,6 +7,7 @@
 
 """Tools for training and testing a model."""
 
+from fvcore.nn import FlopCountAnalysis, ActivationCountAnalysis, parameter_count_table
 import os
 
 import numpy as np
@@ -22,7 +23,32 @@ import metric.datasets.loader as loader
 import torch
 from metric.core.config import cfg
 
+
 logger = logging.get_logger(__name__)
+# logger = setup_logger("./logs")
+
+
+def get_model_complexity_info(model, inputs):
+    """
+    返回模型的参数数量（params）、激活数（acts）、FLOPs（flops），单位为原始数值（非MB、非GFLOPs）。
+    Args:
+        model: PyTorch 模型
+        inputs: 输入样本（如 torch.randn(1, 3, 224, 224)）
+    Returns:
+        dict, 包含 "params", "acts", "flops"
+    """
+    # 计算 FLOPs 和激活数
+    flops = FlopCountAnalysis(model, inputs)
+    acts = ActivationCountAnalysis(model, inputs)
+
+    # 计算可训练参数数目
+    num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+    return {
+        "params": num_params,
+        "acts": acts.total(),
+        "flops": flops.total()
+    }
 
 
 def setup_env():
@@ -51,6 +77,21 @@ def setup_model():
     logger.info("Model:\n{}".format(model))
     # Log model complexity
     # logger.info(logging.dump_log_data(net.complexity(model), "complexity"))
+
+    class Wrapper(torch.nn.Module):
+        def __init__(self, model):
+            super().__init__()
+            self.model = model
+
+        def forward(self, x):
+            dummy_target = torch.zeros(
+                x.shape[0], dtype=torch.long, device=x.device)  # 根据你的任务适配
+            return self.model(x, dummy_target)
+    wrapped_model = Wrapper(model)
+    dummy_input = torch.randn(1, 3, 224, 224)
+    stats = get_model_complexity_info(wrapped_model, dummy_input)
+    logger.info(logging.dump_log_data(stats, "complexity"))
+
     # Transfer the model to the current GPU device
     err_str = "Cannot use more GPU devices than available"
     assert cfg.NUM_GPUS <= torch.cuda.device_count(), err_str
@@ -85,9 +126,9 @@ def train_epoch(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch
         # Transfer the data to the current GPU device
         inputs, labels = inputs.cuda(), labels.cuda(non_blocking=True)
         # Perform the forward pass
-        assert cfg.MODEL.TYPE.endswith(
-            "_supermodel"
-        ), "train_code for retrain supuremodel only"
+        # assert cfg.MODEL.TYPE.endswith(
+        #     "_supermodel"
+        # ), "train_code for retrain supuremodel only"
         if cfg.MODEL.TYPE.endswith("_supermodel"):
             if cfg.MODEL.SUPERMODELRETRAIN is True:
                 # retrain mock model with rngs
@@ -167,9 +208,9 @@ def test_epoch(test_loader, model, test_meter, cur_epoch):
         # Transfer the data to the current GPU device
         inputs, labels = inputs.cuda(), labels.cuda(non_blocking=True)
         # Compute the predictions
-        assert cfg.MODEL.TYPE.endswith(
-            "_supermodel"
-        ), "test_code for retrain supuremodel only"
+        # assert cfg.MODEL.TYPE.endswith(
+        #     "_supermodel"
+        # ), "test_code for retrain supuremodel only"
         if cfg.MODEL.TYPE.endswith("_supermodel"):
             if cfg.MODEL.SUPERMODELRETRAIN is True:
                 rng = cfg.MODEL.RANS  # use rngs from search methods.
@@ -196,7 +237,8 @@ def test_epoch(test_loader, model, test_meter, cur_epoch):
         top1_err, top5_err = top1_err.item(), top5_err.item()
         test_meter.iter_toc()
         # Update and log stats
-        test_meter.update_stats(top1_err, top5_err, inputs.size(0) * cfg.NUM_GPUS)
+        test_meter.update_stats(
+            top1_err, top5_err, inputs.size(0) * cfg.NUM_GPUS)
         test_meter.log_iter_stats(cur_epoch, cur_iter)
         test_meter.iter_tic()
     # Log epoch stats
@@ -216,12 +258,14 @@ def train_model():
     start_epoch = 0
     if cfg.TRAIN.AUTO_RESUME and checkpoint.has_checkpoint():
         last_checkpoint = checkpoint.get_last_checkpoint()
-        checkpoint_epoch = checkpoint.load_checkpoint(last_checkpoint, model, optimizer)
+        checkpoint_epoch = checkpoint.load_checkpoint(
+            last_checkpoint, model, optimizer)
         logger.info("Loaded checkpoint from: {}".format(last_checkpoint))
         start_epoch = checkpoint_epoch + 1
     elif cfg.TRAIN.WEIGHTS:
         checkpoint.load_checkpoint(cfg.TRAIN.WEIGHTS, model)
-        logger.info("Loaded initial weights from: {}".format(cfg.TRAIN.WEIGHTS))
+        logger.info("Loaded initial weights from: {}".format(
+            cfg.TRAIN.WEIGHTS))
     # Create data loaders and meters
     train_loader = loader.construct_train_loader()
     test_loader = loader.construct_test_loader()
@@ -234,13 +278,15 @@ def train_model():
     logger.info("Start epoch: {}".format(start_epoch + 1))
     for cur_epoch in range(start_epoch, cfg.OPTIM.MAX_EPOCH):
         # Train for one epoch
-        train_epoch(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch)
+        train_epoch(train_loader, model, loss_fun,
+                    optimizer, train_meter, cur_epoch)
         # Compute precise BN stats
         if cfg.BN.USE_PRECISE_STATS:
             net.compute_precise_bn_stats(model, train_loader)
         # Save a checkpoint
         if (cur_epoch + 1) % cfg.TRAIN.CHECKPOINT_PERIOD == 0:
-            checkpoint_file = checkpoint.save_checkpoint(model, optimizer, cur_epoch)
+            checkpoint_file = checkpoint.save_checkpoint(
+                model, optimizer, cur_epoch)
             logger.info("Wrote checkpoint to: {}".format(checkpoint_file))
         # Evaluate the model
         next_epoch = cur_epoch + 1

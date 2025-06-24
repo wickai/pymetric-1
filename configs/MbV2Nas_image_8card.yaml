@@ -1,12 +1,12 @@
 MODEL:
-  TYPE: mobilenetmock
+  TYPE: mobilenetv2_nas
   NUM_CLASSES: 1000
-  RANS: [3, 3, 1, 1, 1, 3, 3, 3, 0, 3, 0, 3, 0, 0, 1, 3, 4, 3, 2, 0, 1]
-  FIRST_LAYER_STRIDE: 2
+  OP_CODES: [10, 7, 7, 7, 3, 11, 6, 10, 8, 6, 0, 12, 7, 1, 9, 12, 3]
+  WIDTH_CODES: [1, 1, 1, 1, 1, 0, 0]
   HEADS:
     NAME: "LinearHead"
     NUM_CLASSES: 1000
-    IN_FEAT: 960
+    IN_FEAT: 1280
     REDUCTION_DIM: 960
     POOL_LAYER: "avgpool"
     CLS_LAYER: "linear"
@@ -17,7 +17,7 @@ MODEL:
 BN:
   ZERO_INIT_FINAL_GAMMA: True
 OPTIM:
-  BASE_LR: 1.0
+  BASE_LR: 0.5
   LR_POLICY: cos
   STEPS: [0, 30, 60, 90]
   LR_MULT: 0.1
@@ -27,16 +27,16 @@ OPTIM:
   WEIGHT_DECAY: 0.00004
 TRAIN:
   DATASET: imagenet
-  SPLIT: train_list.txt
-  BATCH_SIZE: 2560
+  SPLIT: train
+  BATCH_SIZE: 1280
   IM_SIZE: 224
   CHECKPOINT_PERIOD: 1
   EVAL_PERIOD: 1
 TEST:
   DATASET: imagenet
-  SPLIT: val_list.txt
-  BATCH_SIZE: 1600
-  IM_SIZE: 224
+  SPLIT: validation
+  BATCH_SIZE: 400
+  IM_SIZE: 256
 NUM_GPUS: 8
 DATA_LOADER:
   NUM_WORKERS: 16
@@ -45,3 +45,4 @@ DATA_LOADER:
 CUDNN:
   BENCHMARK: True
 OUT_DIR: .
+LOG_DEST: file

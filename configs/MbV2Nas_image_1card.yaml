@@ -27,14 +27,14 @@ OPTIM:
   WEIGHT_DECAY: 0.00004
 TRAIN:
   DATASET: imagenet
-  SPLIT: train_list.txt
+  SPLIT: train
   BATCH_SIZE: 160
   IM_SIZE: 224
   CHECKPOINT_PERIOD: 1
   EVAL_PERIOD: 1
 TEST:
   DATASET: imagenet
-  SPLIT: val_list.txt
+  SPLIT: validation
   BATCH_SIZE: 80
   IM_SIZE: 256
 NUM_GPUS: 1

@@ -11,12 +11,13 @@ import os
 
 import torch
 from metric.core.config import cfg
-from metric.datasets.commondataset import DataSet
+from metric.datasets.commondataset import DataSet, HuggingFaceImageNetDataset
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler
 from .cifar10 import Cifar10
 from metric.datasets.torch_transforms import get_mixup_cutmix
 from torch.utils.data.dataloader import default_collate
+from datasets import load_dataset
 
 
 # Default data directory (/path/pycls/pycls/datasets/data)
@@ -33,6 +34,9 @@ def _construct_loader(
     if dataset_name.lower() == "cifar10":
         data_path = os.path.join(_DATA_DIR, _PATHS[dataset_name.lower()])
         dataset = Cifar10(data_path, split)
+    if dataset_name.lower() == "imagenet":
+        hf_dataset = load_dataset("imagenet-1k", split=split)  # or "validation"
+        dataset = HuggingFaceImageNetDataset(hf_dataset, split=split)
     else:
         data_path = os.path.join(_DATA_DIR, dataset_name)
         # Construct the dataset from commendataset

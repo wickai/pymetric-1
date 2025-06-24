@@ -31,6 +31,8 @@ _EIG_VECS = np.array(
 )
 
 
+
+    
 class DataSet(torch.utils.data.Dataset):
     """Common dataset."""
 
@@ -91,3 +93,66 @@ class DataSet(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self._imdb)
+
+class HuggingFaceImageNetDataset(DataSet):
+    def __init__(self, hf_dataset, split):
+        self._hf_dataset = hf_dataset
+        self._split = split
+        self._construct_imdb()
+
+    def _construct_imdb(self):
+        """Adapt HuggingFace dataset to your format."""
+        self._imdb, self._class_ids = [], []
+        # for example in self._hf_dataset:
+        #     self._imdb.append({"image": example["image"], "class": example["label"]})
+        #     self._class_ids.append(example["label"])
+        self._imdb = list(range(len(self._hf_dataset)))  # 保存索引
+        self._class_ids = list(range(1000))#[self._hf_dataset[i]["label"] for i in self._imdb]
+
+        logger.info("Number of images: {}".format(len(self._imdb)))
+        logger.info("Number of classes: {}".format(len(set(self._class_ids))))
+
+    def __getitem__(self, index):
+        ###### old
+        # # Load image (already PIL Image)
+        # # im = self._imdb[index]["image"]
+        # # im = np.array(im).astype(np.float32)
+        # data = self._hf_dataset[self._imdb[index]]
+        # im = np.array(data["image"]).astype(np.float32)
+        # # Apply transformation
+        # # print("im.shape",im.shape)
+        # if im.ndim == 2:
+        #     im = np.stack([im] * 3, axis=-1)  # (H, W) -> (H, W, 3)
+        # elif im.shape[2] == 1:
+        #     im = np.repeat(im, 3, axis=2)     # (H, W, 1) -> (H, W, 3)
+        # im = self._prepare_im(im)
+        # # label = self._imdb[index]["class"]
+        # label = data["label"]
+        # return im, label
+        
+        
+        ## add try
+        max_retry = 10
+        retry = 0
+        while retry < max_retry:
+            try:
+                data = self._hf_dataset[self._imdb[index]]
+                im = np.array(data["image"]).astype(np.float32)
+
+                # 修正通道数
+                if im.ndim == 2:
+                    im = np.stack([im] * 3, axis=-1)  # (H, W) -> (H, W, 3)
+                elif im.shape[2] == 1:
+                    im = np.repeat(im, 3, axis=2)     # (H, W, 1) -> (H, W, 3)
+
+                im = self._prepare_im(im)
+                label = data["label"]
+                return im, label
+
+            except Exception as e:
+                print(f"[Warning] Failed to load sample at index {index}: {e}")
+                import random
+                index = random.randint(0, len(self._imdb) - 1)
+                retry += 1
+
+        raise RuntimeError(f"[Error] Repeatedly failed to load a valid sample after {max_retry} retries.")

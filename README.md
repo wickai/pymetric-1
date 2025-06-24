@@ -86,12 +86,18 @@ python tools/metric/train_metric.py     --cfg configs/MSuperModel_image_8card.ya
 
 ## MobilenetV2 Nas
 ```
-python tools/metric/train_metric.py \
+python3 tools/metric/train_metric.py \
     --cfg configs/MbV2Nas_image_1card.yaml \
     OUT_DIR ./output_imagenet \
     PORT 12001 > log_202506241413
 ```
 
+```
+python3 tools/metric/train_metric.py \
+    --cfg configs/MbV2Nas_image_8card.yaml \
+    OUT_DIR ./output_imagenet \
+    PORT 12001 > log_202506241413
+```
 
 
 Extracting features(labels) and evaluation

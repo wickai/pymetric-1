@@ -10,16 +10,18 @@
 import torch
 from metric.core.config import cfg
 from metric.modeling.backbones import ResNet
-from metric.modeling.backbones import VisionTransformer
+# from metric.modeling.backbones import VisionTransformer
 from metric.modeling.backbones import resnest269, resnest50
 from metric.modeling.backbones import resnet50x1, resnet152x1
-from metric.modeling.heads import  LinearHead 
+from metric.modeling.backbones import mobilenet_v2
+from metric.modeling.backbones import mobilenet_v2_nas
+from metric.modeling.heads import LinearHead
 
 # Supported backbones
-_models = {"resnet": ResNet, 
-           "vit": VisionTransformer, 
-           "resnest269": resnest269, "resnest50": resnest50, 
-           "resnet50x1": resnet50x1, "resnet152x1": resnet152x1}
+_models = {"resnet": ResNet,
+           #    "vit": VisionTransformer,
+           "resnest269": resnest269, "resnest50": resnest50,
+           "resnet50x1": resnet50x1, "resnet152x1": resnet152x1, "mobilenetv2": mobilenet_v2, "mobilenetv2_nas": mobilenet_v2_nas}
 # Supported loss functions
 _loss_funs = {"cross_entropy": torch.nn.CrossEntropyLoss}
 # Supported heads
@@ -31,7 +33,7 @@ class MetricModel(torch.nn.Module):
         super(MetricModel, self).__init__()
         self.backbone = build_model()
         self.head = build_head()
-        
+
     def forward(self, x, targets):
         features = self.backbone(x)
         return self.head(features, targets=targets)
@@ -47,7 +49,7 @@ def get_model():
 def get_head():
     err_str = "Head type '{}' not supported"
     assert cfg.MODEL.HEADS.NAME in _heads.keys(), err_str.format(cfg.MODEL.HEADS.NAME)
-    return _heads[cfg.MODEL.HEADS.NAME]    
+    return _heads[cfg.MODEL.HEADS.NAME]
 
 
 def get_loss_fun():
@@ -61,7 +63,7 @@ def build_arch():
     architecture = MetricModel()
     return architecture
 
-    
+
 def build_model():
     """Builds the model."""
     return get_model()()
@@ -90,4 +92,3 @@ def register_head(name, ctor):
 def register_loss_fun(name, ctor):
     """Registers a loss function dynamically."""
     _loss_funs[name] = ctor
-

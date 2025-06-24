@@ -12,6 +12,7 @@ import os
 import torch
 from pycls.core.config import cfg
 from pycls.datasets.commondataset import DataSet
+# from torchvision import datasets, transforms
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler
 
@@ -25,6 +26,19 @@ def _construct_loader(dataset_name, split, batch_size, shuffle, drop_last):
     data_path = os.path.join(_DATA_DIR, dataset_name)
     # Construct the dataset
     dataset = DataSet(data_path, split)
+    
+    # root = '/home/ubuntu/scratch/kaiwei/unzip_imagenet/ILSVRC/Data/CLS-LOC/'
+    # if split == 'train':
+    #     dataset = datasets.ImageFolder(
+    #         os.path.join(root, 'train'),
+    #         transform=transform_train
+    #     )
+    # elif split == 'val':
+    #     dataset = datasets.ImageFolder(
+    #         os.path.join(root, 'val_new'),
+    #         transform=transform_test
+    #     )
+    
     # Create a sampler for multi-process training
     sampler = DistributedSampler(dataset) if cfg.NUM_GPUS > 1 else None
     # Create a loader

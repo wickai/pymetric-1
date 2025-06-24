@@ -44,6 +44,8 @@ Set PYTHONPATH:
 
 ```
 cd $PYMETRIC && export PYTHONPATH=`pwd`:$PYTHONPATH
+
+export PYTHONPATH=/home/ubuntu/scratch/kaiwei/github/pymetric-1
 ```
 
 ## Datasets
@@ -61,6 +63,27 @@ python tools/train_metric.py \
     OUT_DIR ./output \
     PORT 12001 \
     TRAIN.WEIGHTS path/to/pretrainedmodel
+```
+
+```
+python tools/cls/train_net.py \
+    --cfg configs/cls/archive/imagenet/resnet/R-50-1x64d_step_1gpu.yaml \
+    OUT_DIR ./output \
+    PORT 12001 
+```
+
+```
+python tools/metric/train_metric.py \
+    --cfg configs/metric/R-50-1x64d_step_1gpu.yaml \
+    OUT_DIR ./output \
+    PORT 12001 
+```
+
+```
+python tools/metric/train_metric.py \
+    --cfg configs/metric/mbv2_cos_1gpu.yaml \
+    OUT_DIR ./output \
+    PORT 12001 
 ```
 
 Extracting features(labels) and evaluation

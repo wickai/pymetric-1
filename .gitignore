@@ -6,3 +6,12 @@ pycls/datasets/data/cifar-10*
 pyproject.toml
 uv.lock
 .python-version
+
+# __pycache__
+**/__pycache__/**
+
+# output
+output/
+
+# vscode
+.vscode/

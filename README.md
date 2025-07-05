@@ -91,6 +91,13 @@ python3 tools/metric/train_metric.py \
     OUT_DIR ./output_imagenet \
     PORT 12001 > log_202506241413
 ```
+```
+python3 tools/metric/train_metric.py \
+    --cfg configs/MbV2Nas_image_4card.yaml \
+    OUT_DIR ./output_imagenet_v4 \
+    PORT 12001
+```
+
 
 ```
 python3 tools/metric/train_metric.py \

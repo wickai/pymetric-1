@@ -19,7 +19,7 @@ from metric.core.config import cfg
 
 
 # Show filename and line number in logs
-_FORMAT = "[%(filename)s: %(lineno)3d]: %(message)s"
+_FORMAT = "[%(asctime)s][%(filename)s: %(lineno)3d]: %(message)s"
 
 # Log file name (for cfg.LOG_DEST = 'file')
 _LOG_FILE = "stdout.log"

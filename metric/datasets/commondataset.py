@@ -130,7 +130,9 @@ class HuggingFaceImageNetDataset(DataSet):
         # label = data["label"]
         # return im, label
         
-        
+        # data = self._hf_dataset[self._imdb[index]]
+        # print("DEBUG data keys:", data.keys())
+        # print("DEBUG data:", data)
         ## add try
         max_retry = 10
         retry = 0

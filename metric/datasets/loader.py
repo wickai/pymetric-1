@@ -8,6 +8,7 @@
 """Data loader."""
 
 import os
+os.environ["HF_DATASETS_CACHE"] = "/data/wk/kai/data/hf_cache"
 
 import torch
 from metric.core.config import cfg
@@ -17,7 +18,7 @@ from torch.utils.data.sampler import RandomSampler
 from .cifar10 import Cifar10
 from metric.datasets.torch_transforms import get_mixup_cutmix
 from torch.utils.data.dataloader import default_collate
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 
 
 # Default data directory (/path/pycls/pycls/datasets/data)
@@ -27,6 +28,21 @@ _DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 _PATHS = {"cifar10": "cifar10"}
 
 
+def load_imagenet_dataset(split: str):
+    if split == 'validation':
+        split = 'val'
+    local_path = os.path.join("/data/wk/kai/data/imagenet_arrow", split)
+    print("local_path", local_path)
+    if os.path.exists(local_path):
+        print(f"[✓] 使用本地数据集: {local_path}")
+        hf_dataset = load_from_disk(local_path)
+    else:
+        print("[⭳] 本地数据集不存在，正在从 Hugging Face Hub 加载...")
+        # hf_dataset = load_dataset("imagenet-1k", split=split)
+        pass
+    
+    return hf_dataset
+
 def _construct_loader(
     dataset_name, split, batch_size, shuffle, drop_last, use_mixup_cutmix
 ):
@@ -35,7 +51,11 @@ def _construct_loader(
         data_path = os.path.join(_DATA_DIR, _PATHS[dataset_name.lower()])
         dataset = Cifar10(data_path, split)
     if dataset_name.lower() == "imagenet":
-        hf_dataset = load_dataset("imagenet-1k", split=split)  # or "validation"
+        # hf_dataset = load_dataset("imagenet-1k", split=split)  # or "validation"
+        # hf_dataset = load_dataset(
+        #         path="/data/wk/kai/data/mirror/HuggingFace-Download-Accelerator/hf_hub/datasets--imagenet-1k", 
+        #         data_dir="data",split=split)  # or "validation"
+        hf_dataset = load_imagenet_dataset(split)
         dataset = HuggingFaceImageNetDataset(hf_dataset, split=split)
     else:
         data_path = os.path.join(_DATA_DIR, dataset_name)

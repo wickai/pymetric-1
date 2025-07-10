@@ -19,9 +19,14 @@ import metric.core.logging as logging
 import metric.core.meters as meters
 import metric.core.net as net
 import metric.core.optimizer as optim
+import metric.core.ema as ema
+from metric.core.ema import ema_avg_fn
 import metric.datasets.loader as loader
 import torch
 from metric.core.config import cfg
+from torch.optim.swa_utils import AveragedModel
+import copy
+
 
 
 logger = logging.get_logger(__name__)
@@ -70,7 +75,7 @@ def setup_env():
     torch.backends.cudnn.benchmark = cfg.CUDNN.BENCHMARK
 
 
-def setup_model():
+def setup_model(ema_flag=False):
     """Sets up a model for training or testing and log the results."""
     # Build the model
     model = builders.build_arch()
@@ -97,6 +102,11 @@ def setup_model():
     assert cfg.NUM_GPUS <= torch.cuda.device_count(), err_str
     cur_device = torch.cuda.current_device()
     model = model.cuda(device=cur_device)
+    ema_model = None
+    if ema_flag:
+        # ema model defination
+        ema_model = AveragedModel(model, avg_fn=ema_avg_fn)
+        ema_model = ema_model.cuda(device=cur_device)
     # Use multi-process data parallel model in the multi-gpu setting
     if cfg.NUM_GPUS > 1:
         # Make model replica operate on the current device
@@ -108,10 +118,13 @@ def setup_model():
         )
         # Set complexity function to be module's complexity function
         # model.complexity = model.module.complexity
-    return model
+        if ema_flag:
+            ema_model = ema.EmaDDPWrapper(ema_model, device_ids=[cur_device], output_device=cur_device)
+   
+    return model, ema_model
 
 
-def train_epoch(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch):
+def train_epoch(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch, ema_model=None):
     # return
     """Performs one epoch of training."""
     # Shuffle the data
@@ -155,6 +168,8 @@ def train_epoch(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch
         loss.backward()
         # Update the parameters
         optimizer.step()
+        if ema_model is not None:
+            ema_model.update_parameters(model)
         # Compute the errors
 
         # add mix to modify these
@@ -251,7 +266,10 @@ def train_model():
     # Setup training/testing environment
     setup_env()
     # Construct the model, loss_fun, and optimizer
-    model = setup_model()
+    
+    model, ema_model = setup_model(ema_flag=cfg.TRAIN.EMA_FLAG)
+    
+    
     loss_fun = builders.build_loss_fun().cuda()
     optimizer = optim.construct_optimizer(model)
     # Load checkpoint or initial weights
@@ -279,7 +297,8 @@ def train_model():
     for cur_epoch in range(start_epoch, cfg.OPTIM.MAX_EPOCH):
         # Train for one epoch
         train_epoch(train_loader, model, loss_fun,
-                    optimizer, train_meter, cur_epoch)
+                    optimizer, train_meter, cur_epoch, ema_model=ema_model)
+
         # Compute precise BN stats
         if cfg.BN.USE_PRECISE_STATS:
             net.compute_precise_bn_stats(model, train_loader)
@@ -292,6 +311,10 @@ def train_model():
         next_epoch = cur_epoch + 1
         if next_epoch % cfg.TRAIN.EVAL_PERIOD == 0 or next_epoch == cfg.OPTIM.MAX_EPOCH:
             test_epoch(test_loader, model, test_meter, cur_epoch)
+            # 评估 EMA 模型（仅主进程）
+            if ema_model is not None:
+                logger.info("Evaluating EMA model...")
+                test_epoch(test_loader, ema_model, test_meter, cur_epoch)
 
 
 def test_model():
@@ -299,7 +322,7 @@ def test_model():
     # Setup training/testing environment
     setup_env()
     # Construct the model
-    model = setup_model()
+    model, ema_model = setup_model(ema_flag=cfg.TRAIN.EMA_FLAG)
     # Load model weights
     checkpoint.load_checkpoint(cfg.TEST.WEIGHTS, model)
     logger.info("Loaded model weights from: {}".format(cfg.TEST.WEIGHTS))

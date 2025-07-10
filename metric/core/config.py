@@ -327,6 +327,9 @@ _C.TRAIN.AUTO_RESUME = False
 # Weights to start training from
 _C.TRAIN.WEIGHTS = ""
 
+# EMA flag
+_C.TRAIN.EMA_FLAG = False
+
 
 # ------------------------------------------------------------------------------------ #
 # Testing options

@@ -1,7 +1,7 @@
 MODEL:
   TYPE: mobilenetv2_nas
   NUM_CLASSES: 1000
-  OP_CODES: [15, 6, 15, 7, 7, 7, 13, 14, 15, 1, 10, 15, 13, 7, 15, 14, 8, 5, 7, 13, 6]
+  OP_CODES: [8, 8, 8, 9, 9, 9, 3, 3, 3, 16, 13, 9, 1, 7, 2, 8, 17, 2, 9, 17, 7]
   WIDTH_CODES: [0, 0, 0, 0, 0, 0, 0]
   HEADS:
     NAME: "LinearHead"
@@ -21,7 +21,7 @@ OPTIM:
   LR_POLICY: cos
   STEPS: [0, 30, 60, 90]
   LR_MULT: 0.1
-  MAX_EPOCH: 300
+  MAX_EPOCH: 150
   MOMENTUM: 0.9
   NESTEROV: True
   WEIGHT_DECAY: 0.00001

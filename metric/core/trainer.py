@@ -43,7 +43,11 @@ def get_model_complexity_info(model, inputs):
         dict, 包含 "params", "acts", "flops"
     """
     # 计算 FLOPs 和激活数
+
     flops = FlopCountAnalysis(model, inputs)
+    op_flops = flops.by_operator()
+    total_conv_fc_flops = op_flops["conv"] + op_flops["linear"]
+
     acts = ActivationCountAnalysis(model, inputs)
 
     # 计算可训练参数数目
@@ -52,7 +56,9 @@ def get_model_complexity_info(model, inputs):
     return {
         "params": num_params,
         "acts": acts.total(),
-        "flops": flops.total()
+        "flops": flops.total(),
+        "total_conv_fc_flops": total_conv_fc_flops,
+        "op_flops":op_flops
     }
 
 
@@ -134,6 +140,8 @@ def train_epoch(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch
     optim.set_lr(optimizer, lr)
     # Enable training mode
     model.train()
+    if ema_model:
+        ema_model.train()
     train_meter.iter_tic()
     for cur_iter, (inputs, labels) in enumerate(train_loader):
         # Transfer the data to the current GPU device

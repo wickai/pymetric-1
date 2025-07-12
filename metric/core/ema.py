@@ -27,6 +27,9 @@ class EmaDDPWrapper:
 
     def eval(self):
         self.ddp_model.eval()
+        
+    def train(self):
+        self.ddp_model.train()
 
     def to(self, device):
         self.ema_model.to(device)
@@ -37,3 +40,6 @@ class EmaDDPWrapper:
 
     def load_state_dict(self, state_dict):
         self.ema_model.load_state_dict(state_dict)
+        
+    def __call__(self, *args, **kwargs):
+        return self.forward(*args, **kwargs)  # 转发调用

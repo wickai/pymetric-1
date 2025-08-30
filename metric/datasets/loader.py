@@ -12,12 +12,13 @@ os.environ["HF_DATASETS_CACHE"] = "/data/wk/kai/data/hf_cache"
 
 import torch
 from metric.core.config import cfg
-from metric.datasets.commondataset import DataSet, HuggingFaceImageNetDataset
+from metric.datasets.commondataset import DataSet, HuggingFaceImageNetDataset, HuggingFaceFood101Dataset
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler
 from .cifar10 import Cifar10
 from metric.datasets.torch_transforms import get_mixup_cutmix
 from torch.utils.data.dataloader import default_collate
+import torchvision
 from datasets import load_dataset, load_from_disk
 
 
@@ -43,6 +44,17 @@ def load_imagenet_dataset(split: str):
     
     return hf_dataset
 
+def load_food101_dataset(split: str):
+    hf_dataset = load_dataset(
+        "parquet",
+        data_files={
+            "train": "/data/wk/kai/data/datasets--ethz--food101/data/train-*.parquet",
+            "validation": "/data/wk/kai/data/datasets--ethz--food101/data/validation-*.parquet"
+        },
+        split=split
+    )
+    return hf_dataset
+
 def _construct_loader(
     dataset_name, split, batch_size, shuffle, drop_last, use_mixup_cutmix
 ):
@@ -50,13 +62,30 @@ def _construct_loader(
     if dataset_name.lower() == "cifar10":
         data_path = os.path.join(_DATA_DIR, _PATHS[dataset_name.lower()])
         dataset = Cifar10(data_path, split)
-    if dataset_name.lower() == "imagenet":
+    elif dataset_name.lower() == "imagenet":
         # hf_dataset = load_dataset("imagenet-1k", split=split)  # or "validation"
         # hf_dataset = load_dataset(
         #         path="/data/wk/kai/data/mirror/HuggingFace-Download-Accelerator/hf_hub/datasets--imagenet-1k", 
         #         data_dir="data",split=split)  # or "validation"
         hf_dataset = load_imagenet_dataset(split)
         dataset = HuggingFaceImageNetDataset(hf_dataset, split=split)
+    elif dataset_name.lower() == "food101":
+        hf_dataset = load_food101_dataset(split)
+        if split == 'train':
+            train_size = cfg.TRAIN.IM_SIZE
+            transform = torchvision.transforms.Compose([
+                torchvision.transforms.Resize((train_size, train_size)),
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+        else:
+            test_size = cfg.TEST.IM_SIZE
+            transform = torchvision.transforms.Compose([
+                torchvision.transforms.Resize((test_size, test_size)),
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+        dataset = HuggingFaceFood101Dataset(hf_dataset=hf_dataset, split=split, transform=transform)
     else:
         data_path = os.path.join(_DATA_DIR, dataset_name)
         # Construct the dataset from commendataset

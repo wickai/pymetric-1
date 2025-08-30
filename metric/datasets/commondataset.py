@@ -16,13 +16,21 @@ import metric.core.logging as logging
 import metric.datasets.transforms as transforms
 import torch.utils.data
 from metric.core.config import cfg
+from PIL import Image
+import random
 
 
 logger = logging.get_logger(__name__)
 
 # Per-channel mean and SD values in BGR order
-_MEAN = [0.406, 0.456, 0.485]
-_SD = [0.225, 0.224, 0.229]
+# imagenet
+# _MEAN = [0.406, 0.456, 0.485]
+# _SD = [0.225, 0.224, 0.229]
+
+# food101
+# mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+_MEAN = [0.485, 0.456, 0.406]
+_SD = [0.229, 0.224, 0.225]
 
 # Eig vals and vecs of the cov mat
 _EIG_VALS = np.array([[0.2175, 0.0188, 0.0045]])
@@ -153,8 +161,56 @@ class HuggingFaceImageNetDataset(DataSet):
 
             except Exception as e:
                 print(f"[Warning] Failed to load sample at index {index}: {e}")
-                import random
+                # import random
                 index = random.randint(0, len(self._imdb) - 1)
+                retry += 1
+
+        raise RuntimeError(f"[Error] Repeatedly failed to load a valid sample after {max_retry} retries.")
+
+
+# class HuggingFaceFood101Dataset(torch.utils.data.Dataset):
+class HuggingFaceFood101Dataset(DataSet):
+    def __init__(self, hf_dataset, split="train", transform=None):
+        # 加载 food101 数据集
+        self.dataset = hf_dataset
+        self.transform = transform
+        self._imdb = list(range(len(self.dataset)))
+        self._class_ids = list(range(101))
+        self._split = split
+        logger.info("Number of images: {}".format(len(self._imdb)))
+        logger.info("Number of classes: {}".format(len(set(self._class_ids))))
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        # 获取图片路径和标签
+        
+        
+        max_retry = 10
+        retry = 0
+        while retry < max_retry:
+            try:
+                # print(type(self.dataset[idx]["image"]))
+                # print(self.dataset[idx]["image"], "label", self.dataset[idx]["label"])
+                image = self.dataset[idx]["image"]
+                label = self.dataset[idx]["label"]
+
+                # 打开图片
+                image = image.convert("RGB")
+                image = np.array(image)
+                image = self._prepare_im(image)
+                # # 应用变换
+                # if self.transform:
+                #     image = self.transform(image)
+                
+
+                return image, label
+        
+            except Exception as e:
+                print(f"[Warning] Failed to load sample at index {idx}: {e}")
+                # import random
+                idx = random.randint(0, len(self._imdb) - 1)
                 retry += 1
 
         raise RuntimeError(f"[Error] Repeatedly failed to load a valid sample after {max_retry} retries.")

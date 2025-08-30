@@ -1,11 +1,11 @@
 MODEL:
   TYPE: mobilenetv2_nas
-  NUM_CLASSES: 1000
+  NUM_CLASSES: 101
   OP_CODES: [15, 14, 7, 6, 14, 15, 15, 10, 12, 11, 12, 4, 2, 13, 12, 0, 15, 1, 1, 12, 3]
   WIDTH_CODES: [1, 1, 1, 1, 1, 0, 0]
   HEADS:
     NAME: "LinearHead"
-    NUM_CLASSES: 1000
+    NUM_CLASSES: 101
     IN_FEAT: 1280
     REDUCTION_DIM: 960
     POOL_LAYER: "avgpool"
@@ -27,7 +27,7 @@ OPTIM:
   WEIGHT_DECAY: 0.00002
   WARMUP_EPOCHS: 0
 TRAIN:
-  DATASET: imagenet
+  DATASET: food101
   SPLIT: train
   BATCH_SIZE: 512
   IM_SIZE: 224
@@ -35,7 +35,7 @@ TRAIN:
   EVAL_PERIOD: 1
   EMA_FLAG: False
 TEST:
-  DATASET: imagenet
+  DATASET: food101
   SPLIT: validation
   BATCH_SIZE: 256
   IM_SIZE: 256

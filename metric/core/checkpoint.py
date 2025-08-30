@@ -13,6 +13,7 @@ import copy
 import metric.core.distributed as dist
 import torch
 from metric.core.config import cfg
+import numpy
 
 
 # Common prefix for checkpoint file names
@@ -76,7 +77,9 @@ def load_checkpoint(checkpoint_file, model, optimizer=None):
     err_str = "Checkpoint '{}' not found"
     assert os.path.exists(checkpoint_file), err_str.format(checkpoint_file)
     # Load the checkpoint on CPU to avoid GPU mem spike
-    checkpoint = torch.load(checkpoint_file, map_location="cpu")
+    # import torch.serialization
+    # torch.serialization.add_safe_globals([numpy._core.multiarray.scalar])
+    checkpoint = torch.load(checkpoint_file, map_location="cpu", weights_only=False)
     try:
         state_dict = checkpoint["model_state"]
     except KeyError:

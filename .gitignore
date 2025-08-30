@@ -41,3 +41,6 @@ logs/
 
 # logs
 log_*
+
+# pretrained/
+pretrained/

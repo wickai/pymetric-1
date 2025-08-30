@@ -119,9 +119,9 @@ class MobileNetV2(nn.Module):
 
         self._ops = {}
         for k in (3, 5):
-            for r in (1, 2, 4, 6, 8):
-                if k == 5 and r >= 8:
-                    continue
+            for r in (2, 4, 6, 8):
+                # if k == 5 and r >= 8:
+                #     continue
                 base = f"mbconv_{k}x{k}_r{r}"
                 self._ops[base] = mb(k, r, se=False)
                 self._ops[base + "_se"] = mb(k, r, se=True)
@@ -195,15 +195,15 @@ class MobileNetSearchSpace:
         [6, 160, 5, 2], #+2
         [6, 320, 2, 1], #+1
     ]
-    _WIDTH_CHOICES = [1] # flops drops
+    _WIDTH_CHOICES = [1, 1.2] # flops drops
 
     @staticmethod
     def _default_op_list():
         ops = []
         for k in (3, 5):
-            for r in (1, 2, 4, 6, 8): # r = [1,2,4,6]
-                if k == 5 and r >= 8:
-                    continue
+            for r in (2, 4, 6, 8): # r = [1,2,4,6]
+                # if k == 5 and r >= 8:
+                #     continue
                 ops += [f"mbconv_{k}x{k}_r{r}", f"mbconv_{k}x{k}_r{r}_se"]
         ops += ["skip_connect", "zero"]
         return ops

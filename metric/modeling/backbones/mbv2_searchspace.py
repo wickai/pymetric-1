@@ -119,9 +119,9 @@ class MobileNetV2(nn.Module):
 
         self._ops = {}
         for k in (3, 5):
-            for r in (2, 4, 6, 8):
-                # if k == 5 and r >= 8:
-                #     continue
+            for r in (4, 6, 8):
+                if k == 5 and r >= 8:
+                    continue
                 base = f"mbconv_{k}x{k}_r{r}"
                 self._ops[base] = mb(k, r, se=False)
                 self._ops[base + "_se"] = mb(k, r, se=True)
@@ -149,45 +149,10 @@ class MobileNetSearchSpace:
     """
     按照searchspace.py实现的搜索空间
     """
-    # _STAGE_SETTING = [
-    #     # t, c, n, s
-    #     [1, 16, 1, 1],
-    #     [6, 24, 2, 2],
-    #     [6, 32, 3, 2],
-    #     [6, 64, 4, 2],
-    #     [6, 96, 3, 1],
-    #     [6, 160, 3, 2],
-    #     [6, 320, 1, 1],
-    # ]
-    # _WIDTH_CHOICES = [1.0, 1.2]
-    # _STAGE_SETTING = [
-    #     # t, c, n, s
-    #     [1, 16, 1, 1], #[+1]
-    #     [6, 24, 2, 2],
-    #     [6, 32, 3, 2],
-    #     [6, 64, 4, 2],
-    #     [6, 96, 4, 1], #+1
-    #     [6, 160, 5, 2], #+2
-    #     [6, 320, 2, 1], #+1
-    # ]
-    # _WIDTH_CHOICES = [1]
-    # 25 layers 450 flops
-    # _STAGE_SETTING = [
-    #     # t, c, n, s
-    #     [1, 16, 1, 1], #[+1]
-    #     [6, 24, 2, 2],
-    #     [6, 32, 3, 2],
-    #     [6, 64, 4, 2],
-    #     [6, 96, 5, 1], #+1
-    #     [6, 160, 7, 2], #+2
-    #     [6, 320, 3, 1], #+1
-    # ]
-    # _WIDTH_CHOICES = [0.5, 0.75, 1] # flops drops
-    
-    # 21 layers
+    # 21 larers
     _STAGE_SETTING = [
         # t, c, n, s
-        [1, 16, 1, 1], 
+        # [1, 16, 1, 1], 
         [6, 24, 2, 2],
         [6, 32, 3, 2],
         [6, 64, 4, 2],
@@ -195,16 +160,42 @@ class MobileNetSearchSpace:
         [6, 160, 5, 2], #+2
         [6, 320, 2, 1], #+1
     ]
-    _WIDTH_CHOICES = [1, 1.2] # flops drops
+    _WIDTH_CHOICES = [1] # flops drops
+    # 25 layers 450 flops human design (base from 21-layer)
+    # _STAGE_SETTING = [
+    #     # t, c, n, s
+    #     [1, 16, 1, 1], 
+    #     [6, 24, 2, 2],
+    #     [6, 32, 3, 2],
+    #     [6, 64, 4, 2],
+    #     [6, 96, 5, 1], #+1
+    #     [6, 160, 7, 2], #+2
+    #     [6, 320, 3, 1], #+1
+    # ]
+    # _WIDTH_CHOICES = [0.8, 1] # flops drops
+    
+    # # 26 layers efficient calulation, phi=1.8, n_ratio=1.44, (base from 21-layer)
+    # _STAGE_SETTING = [
+    #     # t, c, n, s
+    #     [1, 16, 2, 1], #[+1]
+    #     [6, 24, 3, 2], #[+1]
+    #     [6, 32, 3, 2],
+    #     [6, 64, 5, 2], #[+1]
+    #     [6, 96, 5, 1], #[+1]
+    #     [6, 160, 6, 2], #[+1]
+    #     [6, 320, 2, 1], #
+    # ]
+    # _WIDTH_CHOICES = [0.5, 0.75, 1] # flops drops
 
     @staticmethod
     def _default_op_list():
         ops = []
         for k in (3, 5):
-            for r in (2, 4, 6, 8): # r = [1,2,4,6]
-                # if k == 5 and r >= 8:
-                #     continue
-                ops += [f"mbconv_{k}x{k}_r{r}", f"mbconv_{k}x{k}_r{r}_se"]
+            for r in (4, 6, 8): # r = [1,2,4,6]
+                if k == 5 and r >= 8:
+                    continue
+                ops += [f"mbconv_{k}x{k}_r{r}"]
+                ops += [f"mbconv_{k}x{k}_r{r}_se"]
         ops += ["skip_connect", "zero"]
         return ops
 

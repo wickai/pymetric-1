@@ -33,7 +33,8 @@ class Zero(nn.Module):
         if x.size(1) != self.out_c:
             pad = self.out_c - x.size(1)
             x = nn.functional.pad(x, (0, 0, 0, 0, 0, pad))
-        return x.mul(0.0)
+        # return x.mul(0.0)
+        return x
 
 
 class MBConv(nn.Module):
